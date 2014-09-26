@@ -1,5 +1,6 @@
 package saml2tester.common;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -9,6 +10,12 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.security.KeyPair;
+import java.security.Security;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
@@ -26,14 +33,37 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.codec.binary.StringUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMReader;
 import org.opensaml.Configuration;
+import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.SAMLObject;
+import org.opensaml.common.SignableSAMLObject;
+import org.opensaml.xml.ConfigurationException;
+import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.io.Marshaller;
 import org.opensaml.xml.io.MarshallingException;
+import org.opensaml.xml.security.SecurityConfiguration;
+import org.opensaml.xml.security.SecurityException;
+import org.opensaml.xml.security.keyinfo.KeyInfoGenerator;
+import org.opensaml.xml.security.keyinfo.KeyInfoGeneratorFactory;
+import org.opensaml.xml.security.keyinfo.KeyInfoGeneratorManager;
+import org.opensaml.xml.security.keyinfo.NamedKeyInfoGeneratorManager;
+import org.opensaml.xml.security.x509.BasicX509Credential;
+import org.opensaml.xml.signature.KeyInfo;
+import org.opensaml.xml.signature.Signature;
+import org.opensaml.xml.signature.SignatureConstants;
+import org.opensaml.xml.signature.SignatureException;
+import org.opensaml.xml.signature.Signer;
 import org.opensaml.xml.util.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
+import saml2tester.common.standardNames.Attribute;
 
 /**
  * Utility class containing some convenience methods. 
@@ -44,6 +74,8 @@ import org.xml.sax.SAXException;
  *
  */
 public class SAMLUtil {
+	
+	private static final Logger logger = LoggerFactory.getLogger(SAMLUtil.class);
 	
 	/**
 	 * Encodes the SAML Request or Response according to the Redirect binding.
@@ -63,12 +95,9 @@ public class SAMLUtil {
 			// url-encode
 			return URLEncoder.encode(b64compressedRequest, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			// url encoding failed because the encoding was not supported
-			e.printStackTrace();
-			return "";
+			logger.error("Could not deflate or url-encode the message", e);
 		} catch (IOException e) {
-			// problems writing to the deflated stream
-			e.printStackTrace();
+			logger.error("Could not deflate the message", e);
 		}
 		return null;
 	}
@@ -93,7 +122,7 @@ public class SAMLUtil {
 	 * @return the decoded SAML message
 	 */
 	public static String decodeSamlMessageForRedirect(String request) {
-		try {
+		try{
 			// url-decoding was already done by the mock IdP so only do base64-decode and decompress
 			ByteArrayInputStream bytesIn = new ByteArrayInputStream(Base64.decode(request));
             InflaterInputStream inflater = new InflaterInputStream(bytesIn, new Inflater(true));
@@ -105,12 +134,9 @@ public class SAMLUtil {
                 bytesOut.write(buffer, 0, length);
             }
             return bytesOut.toString();
-		} catch (UnsupportedEncodingException e) {
-			// url decoding failed because the encoding was not supported
-			e.printStackTrace();
 		} catch (IOException e) {
-			e.printStackTrace();
-		} 
+			logger.error("Could not inflate the message", e);
+		}
 		return null;
 	}
 
@@ -134,6 +160,8 @@ public class SAMLUtil {
 	 * @return
 	 */
 	public static Document fromXML(String xmlString){
+		logger.debug("Creating org.w3c.dom.Document from XML String");
+
 		if (xmlString != null && !xmlString.isEmpty()){
 			try {
 				DocumentBuilderFactory xmlDocBuilder = DocumentBuilderFactory.newInstance();
@@ -148,11 +176,11 @@ public class SAMLUtil {
 					return docbuilder.parse(new InputSource(new StringReader(xmlString)));
 				}
 			} catch (ParserConfigurationException e) {
-				e.printStackTrace();
+				logger.error("Could not parse the Document", e);
 			} catch (SAXException e) {
-				e.printStackTrace();
+				logger.error("Could not parse the Document", e);
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error("Could not parse the Document", e);
 			}
 		}
 		return null;
@@ -165,16 +193,17 @@ public class SAMLUtil {
 	 */
 	public static String toXML(SAMLObject samlObj){
 		try {
+			logger.debug("Creating XML String from SAML Object");
+			
 			Marshaller marshall = Configuration.getMarshallerFactory().getMarshaller(samlObj.getElementQName());
 			// Marshall the SAML object into an XML object
 			Document xmlDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 			marshall.marshall(samlObj, xmlDoc);
 			return toXML(xmlDoc);
 		} catch (MarshallingException e) {
-			System.err.println("Could not marshall the metadata into an Element");
-			e.printStackTrace();
+			logger.error("Could not parse the Document", e);
 		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
+			logger.error("Could not parse the Document", e);
 		}
 		return "";
 	}
@@ -186,21 +215,98 @@ public class SAMLUtil {
 	 * @return the given XML Document as a string or an empty string if it could not be converted
 	 */
 	public static String toXML(Document doc){
+		logger.debug("Creating XML String from org.w3c.dom.Document");
 		try {
 			// Convert the XML object to a string
 			Transformer transformer = TransformerFactory.newInstance().newTransformer();
 			StringWriter writer = new StringWriter();
 			transformer.transform(new DOMSource(doc), new StreamResult(writer));
-			return writer.toString();
+			String xml = writer.toString();
+			
+			logger.trace("Created XML String:\n"+xml);
+			
+			return xml;
 		} catch (TransformerConfigurationException e) {
-			e.printStackTrace();
+			logger.error("Could not convert the metadata object to a string", e);
 		} catch (TransformerFactoryConfigurationError e) {
-			e.printStackTrace();
+			logger.error("Could not convert the metadata object to a string", e);
 		} catch (TransformerException e) {
-			System.err.println("Could not convert the metadata object to a string");
-			e.printStackTrace();
+			logger.error("Could not convert the metadata object to a string", e);
 		}
 		return "";
 	}
+	
+	/**
+	 * Sign a SAML object with the given private key and certificate
+	 * 
+	 * @param samlObj is the object that should be signed
+	 * @param privKey is the private key that should be used for signing
+	 * @param cert is the certificate that should be used for signing
+	 * @return the signed SAML object, or the original SAML object if signing failed
+	 */
+	public static void sign(SignableSAMLObject samlObj, String privKey, String cert){
+		try {
+			DefaultBootstrap.bootstrap();
+			XMLObjectBuilderFactory builderfac = Configuration.getBuilderFactory();
+			Signature signature = (Signature) builderfac.getBuilder(Signature.DEFAULT_ELEMENT_NAME).buildObject(Signature.DEFAULT_ELEMENT_NAME);
+			// retrieve the private key
+			BufferedReader br = new BufferedReader(new StringReader(privKey));
+			Security.addProvider(new BouncyCastleProvider());
+			PEMReader pr = new PEMReader(br);
+			KeyPair kp = (KeyPair) pr.readObject();
+			pr.close();
+			br.close();
+			RSAPrivateKey privateKey = (RSAPrivateKey) kp.getPrivate();
+			
+			// retrieve the certificate
+			X509Certificate idpCert = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(new ByteArrayInputStream(cert.getBytes()));
+			BasicX509Credential signingCred = new BasicX509Credential();
+			
+			signingCred.setEntityCertificate(idpCert);
+			signingCred.setPublicKey(idpCert.getPublicKey());
+			signingCred.setPrivateKey(privateKey);
+			
+			signature.setSigningCredential(signingCred);
+			signature.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1);
+			signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
+			
+			SecurityConfiguration secConfiguration = Configuration.getGlobalSecurityConfiguration();
+			NamedKeyInfoGeneratorManager namedKeyInfoGeneratorManager = secConfiguration.getKeyInfoGeneratorManager();
+			KeyInfoGeneratorManager keyInfoGeneratorManager = namedKeyInfoGeneratorManager.getDefaultManager();
+			KeyInfoGeneratorFactory keyInfoGeneratorFactory = keyInfoGeneratorManager.getFactory(signingCred);
+			KeyInfoGenerator keyInfoGenerator = keyInfoGeneratorFactory.newInstance();
+			KeyInfo keyInfo = keyInfoGenerator.generate(signingCred);
+			signature.setKeyInfo(keyInfo);
+			// add signature to the SAML object
+			samlObj.setSignature(signature);
+			// marshall the SAML object in preparation of signing
+			Configuration.getMarshallerFactory().getMarshaller(samlObj).marshall(samlObj);
+			// actually calculate the signature
+			Signer.signObject(signature);
+		} catch (ConfigurationException e) {
+			logger.error("Could not sign the message", e);
+		} catch (CertificateException e) {
+			logger.error("Could not sign the message", e);
+		} catch (IOException e) {
+			logger.error("Could not sign the message", e);
+		} catch (MarshallingException e) {
+			logger.error("Could not sign the message", e);
+		} catch (SignatureException e) {
+			logger.error("Could not sign the message", e);
+		} catch (SecurityException e) {
+			logger.error("Could not sign the message", e);
+		}
+	}
 
+	/**
+	 * Retrieve the ID of the top-level node in the provided XML
+	 * 
+	 * @param message is the XML message from which we want the ID
+	 * @return the value of the ID attribute of the top-level Node in the XML
+	 */
+	public static String getSamlMessageID(String message) {
+		Document requestDoc = SAMLUtil.fromXML(message);
+		Node reqID = requestDoc.getDocumentElement().getAttributes().getNamedItem(Attribute.ID);
+		return reqID.getNodeValue();
+	}
 }

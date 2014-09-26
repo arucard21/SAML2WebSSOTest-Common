@@ -20,8 +20,14 @@ public class SAMLValues {
 	public static final String DECISION_PERMIT = "Permit";
 	public static final String DECISION_DENY = "Deny";
 	public static final String DECISION_INDETERMINATE = "Indeterminate";
-	public static final String NAMEID_FORMAT_ENTITY = "urn:oasis:names:tc:SAML:2.0:nameid-format:entity";
 	public static final String NAMEID_FORMAT_UNSPECIFIED = "urn:oasis:names:tc:SAML:1.0:nameid-format:unspecified";
+	public static final String NAMEID_FORMAT_EMAILADDRESS = "urn:oasis:names:tc:SAML:1.0:nameid-format:emailAddress";
+	public static final String NAMEID_FORMAT_X509SUBJECTNAME = "urn:oasis:names:tc:SAML:1.0:nameid-format:X509SubjectName";
+	public static final String NAMEID_FORMAT_WINDOWSDOMAINQUALIFIEDNAME = "urn:oasis:names:tc:SAML:1.0:nameid-format:WindowsDomainQualifiedName";
+	public static final String NAMEID_FORMAT_KERBEROS = "urn:oasis:names:tc:SAML:1.0:nameid-format:kerberos";
+	public static final String NAMEID_FORMAT_ENTITY = "urn:oasis:names:tc:SAML:2.0:nameid-format:entity";
+	public static final String NAMEID_FORMAT_PERSISTENT = "urn:oasis:names:tc:SAML:1.0:nameid-format:persistent";
+	public static final String NAMEID_FORMAT_TRANSIENT = "urn:oasis:names:tc:SAML:1.0:nameid-format:transient";
 	public static final String AUTHNCONTEXT_PASSWORD = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password";
 	public static final String CONFIRMATION_METHOD_HOLDER = "urn:oasis:names:tc:SAML:2.0:cm:holder-of-key";
 	public static final String CONFIRMATION_METHOD_SENDER = "urn:oasis:names:tc:SAML:2.0:cm:sender-vouches";
