@@ -63,7 +63,7 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import saml2tester.common.standardNames.Attribute;
+import saml2tester.common.standardNames.SAMLmisc;
 
 /**
  * Utility class containing some convenience methods. 
@@ -306,7 +306,7 @@ public class SAMLUtil {
 	 */
 	public static String getSamlMessageID(String message) {
 		Document requestDoc = SAMLUtil.fromXML(message);
-		Node reqID = requestDoc.getDocumentElement().getAttributes().getNamedItem(Attribute.ID);
+		Node reqID = requestDoc.getDocumentElement().getAttributes().getNamedItem(SAMLmisc.ID);
 		return reqID.getNodeValue();
 	}
 }

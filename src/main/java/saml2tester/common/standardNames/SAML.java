@@ -6,8 +6,11 @@ package saml2tester.common.standardNames;
  *
  */
 public class SAML {
+	// namespace
 	public static final String PREFIX = "saml";
 	public static final String NAMESPACE = "urn:oasis:names:tc:SAML:2.0:assertion";
+	
+	// names
 	public static final String ASSERTION = "Assertion";
 	public static final String BASEID = "BaseID";
 	public static final String NAMEID = "NameID";
@@ -42,4 +45,17 @@ public class SAML {
 	public static final String ATTRIBUTE = "Attribute";
 	public static final String ENCRYPTEDATTRIBUTE = "EncryptedAttribute";
 	public static final String ATTRIBUTEVALUE = "AttributeValue";
+	public static final String RESOURCE = "Resource";
+	public static final String DECISION = "Decision";
+	public static final String COUNT = "Count";
+	public static final String AUTHNINSTANT = "AuthnInstant";
+	public static final String SESSIONNOTONORAFTER = "SessionNotOnOrAfter";
+	public static final String DNSNAME = "DNSName";
+	public static final String RECIPIENT = "Recipient";
+	public static final String METHOD = "Method";
+	public static final String SPPROVIDEDID = "SPProvidedID";
+	public static final String NAMEQUALIFIER = "NameQualifier";
+	public static final String ACTION_NAMESPACE = "Namespace";
+	public static final String NAMEFORMAT = "NameFormat";
+	public static final String FRIENDLYNAME = "FriendlyName";
 }
