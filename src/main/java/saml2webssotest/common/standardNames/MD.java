@@ -1,4 +1,4 @@
-package saml2tester.common.standardNames;
+package saml2webssotest.common.standardNames;
 /**
  * Class contains the tag names for the md namespace
  * 

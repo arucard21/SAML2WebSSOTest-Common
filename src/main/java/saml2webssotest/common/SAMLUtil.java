@@ -1,6 +1,5 @@
-package saml2tester.common;
+package saml2webssotest.common;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -10,12 +9,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.security.KeyPair;
-import java.security.Security;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
@@ -33,8 +26,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.codec.binary.StringUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMReader;
 import org.opensaml.Configuration;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.SAMLObject;
@@ -49,7 +40,7 @@ import org.opensaml.xml.security.keyinfo.KeyInfoGenerator;
 import org.opensaml.xml.security.keyinfo.KeyInfoGeneratorFactory;
 import org.opensaml.xml.security.keyinfo.KeyInfoGeneratorManager;
 import org.opensaml.xml.security.keyinfo.NamedKeyInfoGeneratorManager;
-import org.opensaml.xml.security.x509.BasicX509Credential;
+import org.opensaml.xml.security.x509.X509Credential;
 import org.opensaml.xml.signature.KeyInfo;
 import org.opensaml.xml.signature.Signature;
 import org.opensaml.xml.signature.SignatureConstants;
@@ -63,7 +54,7 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import saml2tester.common.standardNames.SAMLmisc;
+import saml2webssotest.common.standardNames.SAMLmisc;
 
 /**
  * Utility class containing some convenience methods. 
@@ -244,38 +235,22 @@ public class SAMLUtil {
 	 * @param cert is the certificate that should be used for signing
 	 * @return the signed SAML object, or the original SAML object if signing failed
 	 */
-	public static void sign(SignableSAMLObject samlObj, String privKey, String cert){
+	public static void sign(SignableSAMLObject samlObj, X509Credential credential){
 		try {
 			DefaultBootstrap.bootstrap();
 			XMLObjectBuilderFactory builderfac = Configuration.getBuilderFactory();
 			Signature signature = (Signature) builderfac.getBuilder(Signature.DEFAULT_ELEMENT_NAME).buildObject(Signature.DEFAULT_ELEMENT_NAME);
-			// retrieve the private key
-			BufferedReader br = new BufferedReader(new StringReader(privKey));
-			Security.addProvider(new BouncyCastleProvider());
-			PEMReader pr = new PEMReader(br);
-			KeyPair kp = (KeyPair) pr.readObject();
-			pr.close();
-			br.close();
-			RSAPrivateKey privateKey = (RSAPrivateKey) kp.getPrivate();
 			
-			// retrieve the certificate
-			X509Certificate idpCert = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(new ByteArrayInputStream(cert.getBytes()));
-			BasicX509Credential signingCred = new BasicX509Credential();
-			
-			signingCred.setEntityCertificate(idpCert);
-			signingCred.setPublicKey(idpCert.getPublicKey());
-			signingCred.setPrivateKey(privateKey);
-			
-			signature.setSigningCredential(signingCred);
+			signature.setSigningCredential(credential);
 			signature.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1);
 			signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
 			
 			SecurityConfiguration secConfiguration = Configuration.getGlobalSecurityConfiguration();
 			NamedKeyInfoGeneratorManager namedKeyInfoGeneratorManager = secConfiguration.getKeyInfoGeneratorManager();
 			KeyInfoGeneratorManager keyInfoGeneratorManager = namedKeyInfoGeneratorManager.getDefaultManager();
-			KeyInfoGeneratorFactory keyInfoGeneratorFactory = keyInfoGeneratorManager.getFactory(signingCred);
+			KeyInfoGeneratorFactory keyInfoGeneratorFactory = keyInfoGeneratorManager.getFactory(credential);
 			KeyInfoGenerator keyInfoGenerator = keyInfoGeneratorFactory.newInstance();
-			KeyInfo keyInfo = keyInfoGenerator.generate(signingCred);
+			KeyInfo keyInfo = keyInfoGenerator.generate(credential);
 			signature.setKeyInfo(keyInfo);
 			// add signature to the SAML object
 			samlObj.setSignature(signature);
@@ -284,10 +259,6 @@ public class SAMLUtil {
 			// actually calculate the signature
 			Signer.signObject(signature);
 		} catch (ConfigurationException e) {
-			logger.error("Could not sign the message", e);
-		} catch (CertificateException e) {
-			logger.error("Could not sign the message", e);
-		} catch (IOException e) {
 			logger.error("Could not sign the message", e);
 		} catch (MarshallingException e) {
 			logger.error("Could not sign the message", e);

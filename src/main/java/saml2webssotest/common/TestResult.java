@@ -1,4 +1,4 @@
-package saml2tester.common;
+package saml2webssotest.common;
 
 /**
  * TestResult is a simple container class for the result of a single test case

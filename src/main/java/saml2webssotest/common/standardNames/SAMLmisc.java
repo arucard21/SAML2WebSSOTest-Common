@@ -1,4 +1,4 @@
-package saml2tester.common.standardNames;
+package saml2webssotest.common.standardNames;
 /**
  * Class contains common names and common, standard values used in SAML that are not specific to any single SAML namespace
  * 
@@ -53,4 +53,7 @@ public class SAMLmisc {
 	public static final String NAMEFORMAT_URI= "urn:oasis:names:tc:SAML:2.0:attrname-format:uri";
 	public static final String NAMEFORMAT_BASIC= "urn:oasis:names:tc:SAML:2.0:attrname-format:basic";
 	public static final String SAML20_PROTOCOL = "urn:oasis:names:tc:SAML:2.0:protocol";
+	public static final String NAMESPACE_ATTR_X500 = "urn:oasis:names:tc:SAML:2.0:profiles:attribute:X500";
+	public static final String X500_ENCODING = "Encoding";
+	public static final String X500_ENCODING_LDAP = "LDAP";
 }

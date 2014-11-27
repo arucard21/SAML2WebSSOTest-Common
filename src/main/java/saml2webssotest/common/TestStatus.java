@@ -1,4 +1,4 @@
-package saml2tester.common;
+package saml2webssotest.common;
 
 import java.util.List;
 

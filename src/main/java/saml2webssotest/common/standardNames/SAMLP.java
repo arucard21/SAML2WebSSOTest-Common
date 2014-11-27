@@ -1,4 +1,4 @@
-package saml2tester.common.standardNames;
+package saml2webssotest.common.standardNames;
 /**
  * Class contains the tag names for the samlp namespace
  * 
@@ -22,4 +22,16 @@ public class SAMLP {
 	public static final String ISSUEINSTANT = "IssueInstant";
 	public static final String ASSERTIONCONSUMERSERVICEURL = "AssertionConsumerServiceURL";
 	public static final String PROTOCOLBINDING = "ProtocolBinding";
+	public static final String NAMEIDPOLICY = "NameIDPolicy";
+	public static final String ALLOWCREATE = "AllowCreate";
+	public static final String REQUESTEDAUTHNCONTEXT = "RequestedAuthnContext";
+	public static final String AUTHNCONTEXTCLASSREF = "AuthnContextClassRef";
+	public static final String AUTHNCONTEXTDECLREF = "AuthnContextDeclRef";
+	public static final String COMPARISON = "Comparison";
+	
+	// values
+	public static final String COMPARISON_EXACT = "exact";
+	public static final String COMPARISON_MINIMUM = "minimum";
+	public static final String COMPARISON_MAXIMUM = "maximum";
+	public static final String COMPARISON_BETTER = "better";
 }
