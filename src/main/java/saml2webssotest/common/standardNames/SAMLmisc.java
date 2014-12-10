@@ -46,6 +46,7 @@ public class SAMLmisc {
 	public static final String CONFIRMATION_METHOD_BEARER = "urn:oasis:names:tc:SAML:2.0:cm:bearer";
 	public static final String URLPARAM_SAMLREQUEST_REDIRECT = "SAMLRequest";
 	public static final String URLPARAM_SAMLREQUEST_POST= "SAMLRequest";
+	public static final String URLPARAM_SAMLRESPONSE_REDIRECT= "SAMLResponse";
 	public static final String URLPARAM_SAMLRESPONSE_POST= "SAMLResponse";
 	public static final String URLPARAM_SAMLARTIFACT = "SAMLArt";
 	public static final String LANG_ENGLISH = "en";
