@@ -57,4 +57,6 @@ public class SAMLmisc {
 	public static final String NAMESPACE_ATTR_X500 = "urn:oasis:names:tc:SAML:2.0:profiles:attribute:X500";
 	public static final String X500_ENCODING = "Encoding";
 	public static final String X500_ENCODING_LDAP = "LDAP";
+	public static final String NAMESPACE_XML_DSIG = "http://www.w3.org/2000/09/xmldsig#"; 
+	public static final String XML_DSIG_SIGNATURE = "Signature";
 }

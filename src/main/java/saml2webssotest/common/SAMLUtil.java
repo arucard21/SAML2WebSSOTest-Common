@@ -146,9 +146,11 @@ public class SAMLUtil {
 	}
 	
 	/**
+	 * Convert an XML string (or URL to an XML document) to an org.w3c.dom.Document object
 	 * 
-	 * @param xmlString
-	 * @return
+	 * @param xmlString is the XML document you wish to convert, either as XML directly in
+	 * the string or the location (in URL form) of the XML document
+	 * @return the Document object representing the provided XML document 
 	 */
 	public static Document fromXML(String xmlString){
 		logger.debug("Creating org.w3c.dom.Document from XML String");
@@ -167,11 +169,11 @@ public class SAMLUtil {
 					return docbuilder.parse(new InputSource(new StringReader(xmlString)));
 				}
 			} catch (ParserConfigurationException e) {
-				logger.error("Could not parse the Document", e);
+				logger.error("Could not parse the string as Document", e);
 			} catch (SAXException e) {
-				logger.error("Could not parse the Document", e);
+				logger.error("Could not parse the string as Document", e);
 			} catch (IOException e) {
-				logger.error("Could not parse the Document", e);
+				logger.error("Could not parse the string as Document", e);
 			}
 		}
 		return null;
@@ -212,17 +214,13 @@ public class SAMLUtil {
 			Transformer transformer = TransformerFactory.newInstance().newTransformer();
 			StringWriter writer = new StringWriter();
 			transformer.transform(new DOMSource(doc), new StreamResult(writer));
-			String xml = writer.toString();
-			
-			logger.trace("Created XML String:\n"+xml);
-			
-			return xml;
+			return writer.toString();
 		} catch (TransformerConfigurationException e) {
-			logger.error("Could not convert the metadata object to a string", e);
+			logger.error("Could not convert the XML object to a string", e);
 		} catch (TransformerFactoryConfigurationError e) {
-			logger.error("Could not convert the metadata object to a string", e);
+			logger.error("Could not convert the XML object to a string", e);
 		} catch (TransformerException e) {
-			logger.error("Could not convert the metadata object to a string", e);
+			logger.error("Could not convert the XML object to a string", e);
 		}
 		return "";
 	}

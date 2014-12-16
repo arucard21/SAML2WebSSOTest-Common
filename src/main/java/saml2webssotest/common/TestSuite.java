@@ -1,5 +1,7 @@
 package saml2webssotest.common;
 
+import java.net.URL;
+
 import org.w3c.dom.Document;
 
 import saml2webssotest.common.TestStatus;
@@ -20,6 +22,13 @@ public interface TestSuite {
 	 * @return: the metadata XML that should be used by the mocked SAML entity when running tests from this test suite
 	 */
 	public abstract String getMockedMetadata();
+	
+	/**
+	 * Retrieves the URL for the mock server
+	 * 
+	 * @return the URL for the mock server
+	 */
+	public abstract URL getMockServerURL();
 
 	/**
 	 * The interface for all test cases. Defines the methods that are required for the test runner to correctly run
@@ -41,18 +50,12 @@ public interface TestSuite {
 		String getDescription();
 		
 		/**
-		 * Retrieve the message that should be reported when the test passes.
+		 * Retrieve a more descriptive, human-readable message about the test result.
+		 * This can also contain information about how and why the result was achieved.
 		 * 
-		 * @return the message for when the test passes
+		 * @return the message about the test result
 		 */
-		String getSuccessMessage();
-		
-		/**
-		 * Retrieve the message that should be reported when the test fails.
-		 * 
-		 * @return the message for when the test fails
-		 */
-		String getFailedMessage();
+		String getResultMessage();
 	}
 	
 	/**

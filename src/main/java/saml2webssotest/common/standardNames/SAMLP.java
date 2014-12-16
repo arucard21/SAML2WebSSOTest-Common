@@ -21,6 +21,7 @@ public class SAMLP {
 	public static final String DESTINATION = "Destination";
 	public static final String ISSUEINSTANT = "IssueInstant";
 	public static final String ASSERTIONCONSUMERSERVICEURL = "AssertionConsumerServiceURL";
+	public static final String ASSERTIONCONSUMERSERVICEINDEX = "AssertionConsumerServiceIndex";
 	public static final String PROTOCOLBINDING = "ProtocolBinding";
 	public static final String NAMEIDPOLICY = "NameIDPolicy";
 	public static final String ALLOWCREATE = "AllowCreate";
@@ -28,6 +29,7 @@ public class SAMLP {
 	public static final String AUTHNCONTEXTCLASSREF = "AuthnContextClassRef";
 	public static final String AUTHNCONTEXTDECLREF = "AuthnContextDeclRef";
 	public static final String COMPARISON = "Comparison";
+	public static final String AUTHNREQUEST = "AuthnRequest";
 	
 	// values
 	public static final String COMPARISON_EXACT = "exact";
