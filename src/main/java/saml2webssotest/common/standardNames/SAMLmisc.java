@@ -59,4 +59,5 @@ public class SAMLmisc {
 	public static final String X500_ENCODING_LDAP = "LDAP";
 	public static final String NAMESPACE_XML_DSIG = "http://www.w3.org/2000/09/xmldsig#"; 
 	public static final String XML_DSIG_SIGNATURE = "Signature";
+	public static final String XML_DSIG_SIGNATUREVALUE = "SignatureValue";
 }

@@ -229,8 +229,7 @@ public class SAMLUtil {
 	 * Sign a SAML object with the given private key and certificate
 	 * 
 	 * @param samlObj is the object that should be signed
-	 * @param privKey is the private key that should be used for signing
-	 * @param cert is the certificate that should be used for signing
+	 * @param credential is the object that holds the X509 certificate and private key that should be used for signing
 	 * @return the signed SAML object, or the original SAML object if signing failed
 	 */
 	public static void sign(SignableSAMLObject samlObj, X509Credential credential){
