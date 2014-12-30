@@ -5,6 +5,7 @@ import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -23,20 +24,23 @@ import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.google.gson.GsonBuilder;
 
-public class TestRunnerUtil {
+public abstract class TestRunner {
 	/**
 	 * Logger for this class
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(TestRunnerUtil.class);
-
+	private final Logger logger = LoggerFactory.getLogger(TestRunner.class);
+	/**
+	 * The testcase(s) that should be run
+	 */
+	public ArrayList<TestCase> testcases;
+	/**
+	 * Contains the mock server
+	 */
+	public Server mockServer;
 	/**
 	 * Display the list of test suites
-	 * 
-	 * When new test suites are created, they need to be added here manually to
-	 * be listed though they can be used without being listed. (Doing this
-	 * dynamically is not stable enough with Java Reflection)
 	 */
-	public static void listTestSuites(String tsPackage) {
+	public void listTestSuites(String tsPackage) {
 		Reflections tsReflections = new Reflections(tsPackage);
 		Set<Class<? extends TestSuite>> testsuites = tsReflections.getSubTypesOf(TestSuite.class);
 		for (Class<? extends TestSuite> ts : testsuites){
@@ -50,7 +54,7 @@ public class TestRunnerUtil {
 	/**
 	 * Display the list of test cases for the current test suite
 	 */
-	public static void listTestCases(TestSuite testsuite) {
+	public void listTestCases(TestSuite testsuite) {
 		// iterate through all test cases
 		for (Class<?> testcase : testsuite.getClass().getDeclaredClasses()) {
 			// check if the class object is in fact a test case
@@ -88,7 +92,7 @@ public class TestRunnerUtil {
 	 * @param testsuite
 	 *            is the test suite for which we should display the metadata
 	 */
-	public static void outputMockedMetadata(TestSuite testsuite) {
+	public void outputMockedMetadata(TestSuite testsuite) {
 		System.out.println(testsuite.getMockedMetadata());
 	}
 
@@ -97,7 +101,7 @@ public class TestRunnerUtil {
 	 * 
 	 * @param testresults is a list of test case results
 	 */
-	public static void outputTestResults(List<TestResult> testresults) {
+	public void outputTestResults(List<TestResult> testresults) {
 		System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(testresults));
 	}
 
@@ -109,7 +113,7 @@ public class TestRunnerUtil {
 	 * @param handler is the handler that will be used in the given test suite
 	 * @return the created mock server
 	 */
-	public static Server newMockServer(URL mockServerURL, Handler handler) {
+	public Server newMockServer(URL mockServerURL, Handler handler) {
 		// create the mock IdP and add all required handlers
 		Server mockServer = new Server(
 				new InetSocketAddress(mockServerURL.getHost(), mockServerURL.getPort()));
@@ -136,7 +140,7 @@ public class TestRunnerUtil {
 	 * the given test case name, or all test cases in the test suite if the given test case 
 	 * name is null or empty
 	 */
-	public static ArrayList<TestCase> getTestCases(TestSuite testsuite, String testcaseName) {
+	public ArrayList<TestCase> getTestCases(TestSuite testsuite, String testcaseName) {
 		ArrayList<TestCase> testcases = new ArrayList<TestCase>();
 		for (Class<?> testcaseClass : testsuite.getClass().getDeclaredClasses()) {
 			TestCase curTestcase;
@@ -172,7 +176,7 @@ public class TestRunnerUtil {
 	 * @param interactions is a list of interactions that should be performed on the retrieved page
 	 * @return the page as it was retrieved after all interactions are completed
 	 */
-	public static Page interactWithPage(Page htmlPage, List<Interaction> interactions) {
+	public Page interactWithPage(Page htmlPage, List<Interaction> interactions) {
 		// start login attempt with target SP
 		try {
 			// execute all interactions
@@ -222,4 +226,50 @@ public class TestRunnerUtil {
 		return null;
 	}
 
+	/**
+	 * Run the requested testcase(s) from the requested test suite.
+	 * 
+	 * Prints the results in JSON format to System.out
+	 */
+	public void run(){
+		// run the test case(s) from the test suite
+		LinkedList<TestResult> testresults = new LinkedList<TestResult>();
+		for (TestCase testcase : testcases) {
+			boolean status;
+			String resultMessage;
+			try {
+				status = runTest(testcase);
+				resultMessage = testcase.getResultMessage();
+			} catch (Exception e) {
+				// make sure any exceptions thrown while running a test are caught here
+				// so they don't cause all other tests to be cancelled
+				logger.error("An exception occurred while running test case: " + testcase.getClass().getSimpleName(), e);
+				status = false;
+				resultMessage = "The following exception has occurred (See the log for the full stacktrace): " + e.toString();
+			}
+	
+			TestResult result = new TestResult(status, resultMessage);
+			result.setName(testcase.getClass().getSimpleName());
+			result.setDescription(testcase.getDescription());
+			result.setMandatory(testcase.isMandatory());
+			// add this test result to the list of test results
+			testresults.add(result);
+		}
+		outputTestResults(testresults);
+		// stop the mock server if still running
+		try {
+			if (mockServer != null && mockServer.isStarted()) {
+				mockServer.stop();
+			}
+		} catch (Exception e) {
+			logger.error("The mock server could not be stopped", e);
+		}
+	
+	}
+
+	public abstract void initMockServer();
+
+	public abstract boolean runTest(TestCase testcase);
+
+	public abstract void loadConfig(String optionValue); 
 }

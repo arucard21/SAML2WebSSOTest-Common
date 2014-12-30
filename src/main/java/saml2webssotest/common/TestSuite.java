@@ -4,8 +4,6 @@ import java.net.URL;
 
 import org.w3c.dom.Document;
 
-import saml2webssotest.common.TestStatus;
-
 /**
  * This is the module containing the base interfaces for every test suite. This is extended by the IdP and SP test suites which in 
  * turn can be extended to create custom test suites to test either an IdP or an SP.
@@ -56,6 +54,15 @@ public interface TestSuite {
 		 * @return the message about the test result
 		 */
 		String getResultMessage();
+		
+		/**
+		 * Specify if the requirement on which this test case is based, is mandatory.
+		 *  
+		 * This would correspond with all MUST requirements from the SAML specifications.
+		 *  
+		 * @return true if the SAML entity MUST conform to the requirement in order to be valid
+		 */
+		boolean isMandatory();
 	}
 	
 	/**
@@ -72,6 +79,6 @@ public interface TestSuite {
 		 * 
 		 * @return the status of the test
 		 */
-		TestStatus checkMetadata(Document metadata);
+		boolean checkMetadata(Document metadata);
 	}
 }

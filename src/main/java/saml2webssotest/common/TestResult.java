@@ -7,8 +7,9 @@ package saml2webssotest.common;
  *
  */
 public class TestResult {
-	TestStatus result;
+	String result;
 	String resultMessage;
+	boolean mandatory;
 	String name;
 	String description;
 
@@ -17,13 +18,21 @@ public class TestResult {
 	 * @param result is the result status of the test case
 	 * @param resultMessage is the message given by the test case
 	 */
-	public TestResult(TestStatus result, String resultMessage) {
-		this.result = result;
+	public TestResult(boolean resultBool, String resultMessage) {
+		if(resultBool){
+			result = "PASS";
+		}
+		else{
+			result = "FAIL";
+		}
 		this.resultMessage = resultMessage;
 	}
 
-	public TestStatus getResult() {
-		return result;
+	public boolean getResult() {
+		if (result.equals("PASS")){
+			return true;
+		}
+		return false;
 	}
 
 	public String getResultMessage() {
@@ -45,4 +54,12 @@ public class TestResult {
 	public void setDescription(String description) {
 		this.description = description;
 	}	
+	
+	public boolean getMandatory() {
+		return mandatory;
+	}
+
+	public void setMandatory(boolean mandatory) {
+		this.mandatory = mandatory;
+	}
 }
