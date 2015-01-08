@@ -264,7 +264,6 @@ public abstract class TestRunner {
 		} catch (Exception e) {
 			logger.error("The mock server could not be stopped", e);
 		}
-	
 	}
 
 	public abstract void initMockServer();

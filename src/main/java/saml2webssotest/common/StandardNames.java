@@ -1,16 +1,16 @@
-package saml2webssotest.common.standardNames;
+package saml2webssotest.common;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- * Contains the names of the cipher suites for some of the SSL protocols
- * (retrieved from https://www.openssl.org/docs/apps/ciphers.html)
+ * Contains some standard names used by the test framework, including the names of the cipher suites for 
+ * some of the SSL protocols (retrieved from https://www.openssl.org/docs/apps/ciphers.html)
  *
  * @author RiaasM
  *
  */
-public class CipherSuiteNames {
+public class StandardNames {
 	
 	public static final ArrayList<String> sslv3 = (ArrayList<String>) Arrays.asList(
 			"SSL_RSA_WITH_NULL_MD5", 
@@ -42,5 +42,16 @@ public class CipherSuiteNames {
 			"SSL_DH_anon_WITH_3DES_EDE_CBC_SHA",
 			"SSL_FORTEZZA_KEA_WITH_NULL_SHA",
 			"SSL_FORTEZZA_KEA_WITH_FORTEZZA_CBC_SHA",
-			"SSL_FORTEZZA_KEA_WITH_RC4_128_SHA"); 
+			"SSL_FORTEZZA_KEA_WITH_RC4_128_SHA");
+	public static final String URLPARAM_SAMLREQUEST_REDIRECT = "SAMLRequest";
+	public static final String URLPARAM_SAMLREQUEST_POST= "SAMLRequest";
+	public static final String URLPARAM_SAMLRESPONSE_REDIRECT= "SAMLResponse";
+	public static final String URLPARAM_SAMLRESPONSE_POST= "SAMLResponse";
+	public static final String URLPARAM_SAMLARTIFACT = "SAMLArt";
+	public static final String LANG_ENGLISH = "en";
+	public static final String USE_ENCRYPTION = "encryption";
+	public static final String USE_SIGNING = "signing";
+	public static final String NAMESPACE_ATTR_X500 = "urn:oasis:names:tc:SAML:2.0:profiles:attribute:X500";
+	public static final String X500_ENCODING = "Encoding";
+	public static final String X500_ENCODING_LDAP = "LDAP";
 }
