@@ -238,7 +238,14 @@ public abstract class TestRunner {
 			boolean status;
 			String resultMessage;
 			try {
+				// initialize a new mock server for use in the test case
+				initMockServer();
+				// run the test case
 				status = runTest(testcase);
+				// kill the mock server if it is still running
+				if(mockServer != null && mockServer.isRunning()){
+					killMockServer();
+				}
 				resultMessage = testcase.getResultMessage();
 			} catch (Exception e) {
 				// make sure any exceptions thrown while running a test are caught here
@@ -267,6 +274,8 @@ public abstract class TestRunner {
 	}
 
 	public abstract void initMockServer();
+	
+	public abstract void killMockServer();
 
 	public abstract boolean runTest(TestCase testcase);
 
