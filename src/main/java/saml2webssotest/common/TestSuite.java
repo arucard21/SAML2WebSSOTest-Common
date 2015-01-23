@@ -1,6 +1,7 @@
 package saml2webssotest.common;
 
 import java.net.URL;
+import java.util.List;
 
 import org.w3c.dom.Document;
 
@@ -19,14 +20,26 @@ public interface TestSuite {
 	 * 
 	 * @return: the metadata XML that should be used by the mocked SAML entity when running tests from this test suite
 	 */
-	public abstract String getMockedMetadata();
+	public String getMockedMetadata();
 	
 	/**
 	 * Retrieves the URL for the mock server
 	 * 
 	 * @return the URL for the mock server
 	 */
-	public abstract URL getMockServerURL();
+	public URL getMockServerURL();
+	
+	/**
+	 * Retrieve a list of test suites that this test suite depends on.
+	 * These test suites will be run before this test suite is run. This allows
+	 * you to run all test cases in a test suite as well as all test suites that
+	 * test specifications that your depend on.
+	 * 
+	 * Note that this is ignored when run a single test case from a test suite. 
+	 * 
+	 * @return the list of depending test suites
+	 */
+	public List<TestSuite> getDependencies();
 
 	/**
 	 * The interface for all test cases. Defines the methods that are required for the test runner to correctly run

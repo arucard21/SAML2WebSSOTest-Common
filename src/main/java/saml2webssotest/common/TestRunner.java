@@ -5,7 +5,7 @@ import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -30,9 +30,27 @@ public abstract class TestRunner {
 	 */
 	private final Logger logger = LoggerFactory.getLogger(TestRunner.class);
 	/**
-	 * The testcase(s) that should be run
+	 * Setting to determine if depending test suites should be run
 	 */
-	public ArrayList<TestCase> testcases;
+	public boolean recursive;
+	/**
+	 * The test suite that is being run
+	 */
+	public TestSuite testsuite;
+	/**
+	 * A list of names of the test suites that are currently being run.
+	 * This is used to keep track of which test suites have already been run so
+	 * we can avoid re-running the same test suite
+	 */
+	public ArrayList<String> currentTestSuites = new ArrayList<String>();
+	/**
+	 * The name of the test case that should be run
+	 */
+	public String testcaseName;
+	/**
+	 * The list of test results for each test suite that is run
+	 */
+	HashMap<String, List<TestResult>> testResults = new HashMap<String, List<TestResult>>();
 	/**
 	 * Contains the mock server
 	 */
@@ -101,8 +119,8 @@ public abstract class TestRunner {
 	 * 
 	 * @param testresults is a list of test case results
 	 */
-	public void outputTestResults(List<TestResult> testresults) {
-		System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(testresults));
+	public void outputTestResults() {
+		System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(testResults));
 	}
 
 	/**
@@ -227,13 +245,41 @@ public abstract class TestRunner {
 	}
 
 	/**
+	 * Retrieve the TestSuite object that was used to initiate the test runner
+	 * 
+	 * @return the TestSuite object used to initiate the test runner
+	 */
+	public TestSuite getMainTestSuite(){
+		return testsuite;
+	}
+	
+	/**
 	 * Run the requested testcase(s) from the requested test suite.
 	 * 
 	 * Prints the results in JSON format to System.out
+	 * 
+	 * @param ts is the Test Suite object from which we will run test cases
 	 */
-	public void run(){
+	public void runTestSuite(TestSuite ts){
+		String tsName = ts.getClass().getSimpleName();
+		// run any depending test suite only if the entire test suite is being run and recursion was allowed
+		if ( recursive && (testcaseName == null || testcaseName.isEmpty())){
+			// add the current test suite to the list of suites that are being run
+			currentTestSuites.add(tsName);
+			List<TestSuite> depends = ts.getDependencies();
+			// run each depending test suite
+			for (TestSuite depend: depends ){
+				// only run the test suite if it is not already being run
+				if (!currentTestSuites.contains(depend.getClass().getSimpleName())){
+					runTestSuite(depend);
+				}
+			}
+		}
+		
+		// load the test cases from this test suite that we wish to run
+		ArrayList<TestCase> testcases = getTestCases(ts, testcaseName);
 		// run the test case(s) from the test suite
-		LinkedList<TestResult> testresults = new LinkedList<TestResult>();
+		ArrayList<TestResult> testsuiteResults = new ArrayList<TestResult>();
 		for (TestCase testcase : testcases) {
 			boolean status;
 			String resultMessage;
@@ -242,10 +288,7 @@ public abstract class TestRunner {
 				initMockServer();
 				// run the test case
 				status = runTest(testcase);
-				// kill the mock server if it is still running
-				if(mockServer != null && mockServer.isRunning()){
-					killMockServer();
-				}
+				// get the result message
 				resultMessage = testcase.getResultMessage();
 			} catch (Exception e) {
 				// make sure any exceptions thrown while running a test are caught here
@@ -253,6 +296,9 @@ public abstract class TestRunner {
 				logger.error("An exception occurred while running test case: " + testcase.getClass().getSimpleName(), e);
 				status = false;
 				resultMessage = "The following exception has occurred (See the log for the full stacktrace): " + e.toString();
+			} finally{
+				// kill the mock server if it is still running
+				killMockServer();
 			}
 	
 			TestResult result = new TestResult(status, resultMessage);
@@ -260,17 +306,10 @@ public abstract class TestRunner {
 			result.setDescription(testcase.getDescription());
 			result.setMandatory(testcase.isMandatory());
 			// add this test result to the list of test results
-			testresults.add(result);
+			testsuiteResults.add(result);
 		}
-		outputTestResults(testresults);
-		// stop the mock server if still running
-		try {
-			if (mockServer != null && mockServer.isStarted()) {
-				mockServer.stop();
-			}
-		} catch (Exception e) {
-			logger.error("The mock server could not be stopped", e);
-		}
+		// add the test results of this suite to all test results
+		testResults.put(tsName, testsuiteResults);
 	}
 
 	public abstract void initMockServer();
