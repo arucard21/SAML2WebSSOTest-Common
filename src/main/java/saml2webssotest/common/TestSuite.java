@@ -3,6 +3,7 @@ package saml2webssotest.common;
 import java.net.URL;
 import java.util.List;
 
+import org.opensaml.xml.security.x509.X509Credential;
 import org.w3c.dom.Document;
 
 /**
@@ -28,6 +29,15 @@ public interface TestSuite {
 	 * @return the URL for the mock server
 	 */
 	public URL getMockServerURL();
+	
+	/**
+	 * Retrieve the X.509 Certificate that should be used by the mock server.
+	 * 
+	 * @param certLocation contains the location of the certificate file that should be used (e.g. "keys/mycert.pem")
+	 * 			Can be null or empty, in which case a default certificate is used
+	 * @return: the X.509 Certificate credentials
+	 */
+	public X509Credential getX509Credentials(String certLocation);
 	
 	/**
 	 * Retrieve a list of test suites that this test suite depends on.

@@ -12,6 +12,7 @@ import java.util.Set;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
+import org.opensaml.xml.security.x509.X509Credential;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,6 +115,9 @@ public abstract class TestRunner {
 		System.out.println(testsuite.getMockedMetadata());
 	}
 
+	public X509Credential getMockedX509Credentials(String certLocation){
+		return testsuite.getX509Credentials(certLocation);
+	}
 	/**
 	 * Process the test results and output them as JSON
 	 * 
@@ -194,7 +198,8 @@ public abstract class TestRunner {
 	 * @param interactions is a list of interactions that should be performed on the retrieved page
 	 * @return the page as it was retrieved after all interactions are completed
 	 */
-	public Page interactWithPage(Page htmlPage, List<Interaction> interactions) {
+	@SuppressWarnings("unchecked")
+	public <P extends Page> P interactWithPage(Page htmlPage, List<Interaction> interactions) {
 		// start login attempt with target SP
 		try {
 			// execute all interactions
@@ -235,7 +240,7 @@ public abstract class TestRunner {
 				}
 			}
 			// return the retrieved page
-			return htmlPage; 
+			return (P) htmlPage;
 		} catch (FailingHttpStatusCodeException e) {
 			logger.error("The login page did not return a valid HTTP status code");
 		} catch (ElementNotFoundException e){
