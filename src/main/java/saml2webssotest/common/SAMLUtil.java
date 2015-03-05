@@ -28,12 +28,15 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.commons.codec.binary.StringUtils;
 import org.opensaml.Configuration;
 import org.opensaml.DefaultBootstrap;
-import org.opensaml.common.SAMLObject;
 import org.opensaml.common.SignableSAMLObject;
 import org.opensaml.xml.ConfigurationException;
+import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.io.Marshaller;
 import org.opensaml.xml.io.MarshallingException;
+import org.opensaml.xml.io.Unmarshaller;
+import org.opensaml.xml.io.UnmarshallerFactory;
+import org.opensaml.xml.io.UnmarshallingException;
 import org.opensaml.xml.security.SecurityConfiguration;
 import org.opensaml.xml.security.SecurityException;
 import org.opensaml.xml.security.keyinfo.KeyInfoGenerator;
@@ -50,6 +53,7 @@ import org.opensaml.xml.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -176,13 +180,36 @@ public class SAMLUtil {
 		}
 		return null;
 	}
+	
+	/**
+	 * Convert an XML String (or URL to an XML document) to an XMLObject object
+	 * 
+	 * The returned XMLObject can be cast to the appropriate SAML class (e.g. Response
+	 * or AuthnRequest).
+	 * 
+	 * @param samlXML is the XML document you wish to convert, either as XML directly in
+	 * the string or the location (in URL form) of the XML document
+	 * @return the XMLObject object representing the provided XML document
+	 */
+	public static XMLObject XMLObjectFromXML(String samlXML){
+		Element samlElem = fromXML(samlXML).getDocumentElement();
+		UnmarshallerFactory unmarshallerFactory = Configuration.getUnmarshallerFactory();
+		Unmarshaller unmarshaller = unmarshallerFactory.getUnmarshaller(samlElem);
+		try {
+			return unmarshaller.unmarshall(samlElem);
+		} catch (UnmarshallingException e) {
+			logger.error("Could not create SAML Object from XML string", e);
+		}
+		return null;
+	}
+	
 	/**
 	 * Convert a SAML Object to XML in a string
 	 * 
 	 * @param samlObj is the SAML object that should be converted
 	 * @return the given SAML object as a string or an empty string if it could not be converted
 	 */
-	public static String toXML(SAMLObject samlObj){
+	public static String toXML(XMLObject samlObj){
 		try {
 			logger.debug("Creating XML String from SAML Object");
 			
