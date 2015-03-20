@@ -48,6 +48,7 @@ public class StandardNames {
 	public static final String URLPARAM_SAMLRESPONSE_REDIRECT= "SAMLResponse";
 	public static final String URLPARAM_SAMLRESPONSE_POST= "SAMLResponse";
 	public static final String URLPARAM_SAMLARTIFACT = "SAMLArt";
+	public static final String URLPARAM_RELAYSTATE = "RelayState";
 	public static final String LANG_ENGLISH = "en";
 	public static final String USE_ENCRYPTION = "encryption";
 	public static final String USE_SIGNING = "signing";
