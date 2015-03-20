@@ -55,4 +55,5 @@ public class StandardNames {
 	public static final String NAMESPACE_ATTR_X500 = "urn:oasis:names:tc:SAML:2.0:profiles:attribute:X500";
 	public static final String X500_ENCODING = "Encoding";
 	public static final String X500_ENCODING_LDAP = "LDAP";
+	public static final String URLPARAM_SIGNATURE = "Signature";
 }
