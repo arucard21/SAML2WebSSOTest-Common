@@ -26,7 +26,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.codec.binary.StringUtils;
-import org.opensaml.Configuration;
+import org.opensaml.xml.Configuration;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.SignableSAMLObject;
 import org.opensaml.xml.ConfigurationException;

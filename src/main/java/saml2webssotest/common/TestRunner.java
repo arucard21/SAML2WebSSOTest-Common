@@ -35,6 +35,10 @@ public abstract class TestRunner {
 	 */
 	public boolean recursive;
 	/**
+	 * Setting to determine if embedded tests should be added to the test results
+	 */
+	public boolean showEmbedded;
+	/**
 	 * The test suite that is being run
 	 */
 	public TestSuite testsuite;
@@ -73,16 +77,16 @@ public abstract class TestRunner {
 	/**
 	 * Display the list of test cases for the current test suite
 	 */
-	public void listTestCases(TestSuite testsuite) {
+	public void listTestCases(TestSuite ts) {
 		// iterate through all test cases
-		for (Class<?> testcase : testsuite.getClass().getDeclaredClasses()) {
+		for (Class<?> testcase : ts.getClass().getDeclaredClasses()) {
 			// check if the class object is in fact a test case
 			if (TestCase.class.isAssignableFrom(testcase)) {
 				// output the name of the test case
 				System.out.println(testcase.getSimpleName());
 				TestCase tc;
 				try {
-					tc = (TestCase) testcase.getConstructor(testsuite.getClass()).newInstance(testsuite);
+					tc = (TestCase) testcase.getConstructor(ts.getClass()).newInstance(ts);
 					// also output the description of the test case
 					System.out.println("\t" + tc.getDescription());
 				} catch (InstantiationException e) {
@@ -108,11 +112,11 @@ public abstract class TestRunner {
 	/**
 	 * Display the mock IdP's metadata for the provided test suite.
 	 * 
-	 * @param testsuite
+	 * @param ts
 	 *            is the test suite for which we should display the metadata
 	 */
-	public void outputMockedMetadata(TestSuite testsuite) {
-		System.out.println(testsuite.getMockedMetadata());
+	public void outputMockedMetadata(TestSuite ts) {
+		System.out.println(ts.getMockedMetadata());
 	}
 
 	public X509Credential getMockedX509Credentials(String certLocation){
@@ -137,7 +141,7 @@ public abstract class TestRunner {
 	 */
 	public Server newMockServer(URL mockServerURL, Handler handler) {
 		// create the mock IdP and add all required handlers
-		Server mockServer = new Server(
+		mockServer = new Server(
 				new InetSocketAddress(mockServerURL.getHost(), mockServerURL.getPort()));
 		
 		// add a context handler to properly handle the sso path
@@ -155,21 +159,21 @@ public abstract class TestRunner {
 	 * Retrieve the test case from the test suite that matches the given test case name, or 
 	 * all test cases if the given test case name is empty or null. 
 	 * 
-	 * @param testsuite is the test suite in which the test cases are located
-	 * @param testcaseName is the name of the test case that should be returned. If empty, all 
+	 * @param ts is the test suite in which the test cases are located
+	 * @param tn is the name of the test case that should be returned. If empty, all 
 	 * test cases in the test suite will be returned
 	 * @return a list containing either the test case from the given test suite that matches 
 	 * the given test case name, or all test cases in the test suite if the given test case 
 	 * name is null or empty
 	 */
-	public ArrayList<TestCase> getTestCases(TestSuite testsuite, String testcaseName) {
+	public ArrayList<TestCase> getTestCases(TestSuite ts, String tn) {
 		ArrayList<TestCase> testcases = new ArrayList<TestCase>();
-		for (Class<?> testcaseClass : testsuite.getClass().getDeclaredClasses()) {
+		for (Class<?> testcaseClass : ts.getClass().getDeclaredClasses()) {
 			TestCase curTestcase;
 			try {
-				curTestcase = (TestCase) testcaseClass.getConstructor(testsuite.getClass()).newInstance(testsuite);
+				curTestcase = (TestCase) testcaseClass.getConstructor(ts.getClass()).newInstance(ts);
 				// add the test case to the list if it matches the name that was provided, or if no name was provided
-				if (testcaseName == null || testcaseName.isEmpty() || testcaseName.equals(testcaseClass.getSimpleName())) {
+				if (tn == null || tn.isEmpty() || tn.equals(testcaseClass.getSimpleName())) {
 					testcases.add(curTestcase);
 				}
 			} catch (InstantiationException e) {
@@ -194,53 +198,54 @@ public abstract class TestRunner {
 	 * on that page.
 	 * If no URL is given, only the interactions are performed in the given browser
 	 * 
-	 * @param htmlPage is the page with which we we wish to interact
+	 * @param interactionPage is the page with which we we wish to interact
 	 * @param interactions is a list of interactions that should be performed on the retrieved page
 	 * @return the page as it was retrieved after all interactions are completed
 	 */
 	@SuppressWarnings("unchecked")
-	public <P extends Page> P interactWithPage(Page htmlPage, List<Interaction> interactions) {
+	public <P extends Page> P interactWithPage(Page interactionPage, List<Interaction> interactions) {
+		HtmlPage returnPage = null;
 		// start login attempt with target SP
 		try {
 			// execute all interactions
 			for(Interaction interaction : interactions){
-				if(htmlPage instanceof HtmlPage){
+				if(interactionPage instanceof HtmlPage){
 					// cast the Page to an HtmlPage so we can interact with it
-					HtmlPage loginPage = (HtmlPage) htmlPage;
+					HtmlPage loginPage = (HtmlPage) interactionPage;
 					logger.trace("Login page");
 					logger.trace(loginPage.getWebResponse().getContentAsString());
 				
 					// cast the interaction to the correct class
 					if(interaction instanceof FormInteraction) {
 						FormInteraction formInteraction = (FormInteraction) interaction;
-						htmlPage = formInteraction.executeOnPage(loginPage);
+						returnPage = formInteraction.executeOnPage(loginPage);
 						
 					    logger.trace("Login page (after form submit)");
 					    logger.trace(loginPage.getWebResponse().getContentAsString());
 					}
 					else if(interaction instanceof LinkInteraction) {
 						LinkInteraction linkInteraction = (LinkInteraction) interaction;
-						htmlPage = linkInteraction.executeOnPage(loginPage);
+						returnPage = linkInteraction.executeOnPage(loginPage);
 						
 						logger.trace("Login page (after link click)");
-					    logger.trace(htmlPage.getWebResponse().getContentAsString());
+					    logger.trace(interactionPage.getWebResponse().getContentAsString());
 					}
 					else {
-						htmlPage = interaction.executeOnPage(loginPage);
+						returnPage = interaction.executeOnPage(loginPage);
 						
 						logger.trace("Login page (after element click)");
-					    logger.trace(htmlPage.getWebResponse().getContentAsString());
+					    logger.trace(interactionPage.getWebResponse().getContentAsString());
 					}
 				}
 				else{
 					logger.error("The login page is not an HTML page, so it's not possible to interact with it");
 					logger.trace("Retrieved page:");
-					logger.trace(htmlPage.getWebResponse().getContentAsString());
+					logger.trace(interactionPage.getWebResponse().getContentAsString());
 					break;
 				}
 			}
 			// return the retrieved page
-			return (P) htmlPage;
+			return (P) returnPage;
 		} catch (FailingHttpStatusCodeException e) {
 			logger.error("The login page did not return a valid HTTP status code");
 		} catch (ElementNotFoundException e){
@@ -284,7 +289,7 @@ public abstract class TestRunner {
 		// load the test cases from this test suite that we wish to run
 		ArrayList<TestCase> testcases = getTestCases(ts, testcaseName);
 		// run the test case(s) from the test suite
-		ArrayList<TestResult> testsuiteResults = new ArrayList<TestResult>();
+		ArrayList<TestResult> testsuiteResults =  new ArrayList<TestResult>();
 		for (TestCase testcase : testcases) {
 			boolean status;
 			String resultMessage;
@@ -313,8 +318,41 @@ public abstract class TestRunner {
 			// add this test result to the list of test results
 			testsuiteResults.add(result);
 		}
+		// retrieve the list of existing test results for this test suite
+		List<TestResult> curTsResults = testResults.get(tsName);
+		// if existing test results were found, add them to the existing ones
+		if (curTsResults != null){
+			testsuiteResults.addAll(curTsResults);
+		}
 		// add the test results of this suite to all test results
 		testResults.put(tsName, testsuiteResults);
+	}
+	
+	/**
+	 * Add a single test result to the list of test results that will
+	 * be displayed to the user. The test result must be added as part
+	 * of a specific test suite. This is only used for adding the embedded
+	 * tests to the test results
+	 * 
+	 * @param tsName is the name of the test suite that the test results belongs to
+	 * @param tcResult is the test result that should be added to the list for the given test suite
+	 */
+	public void addTestResult(String tsName, TestResult tcResult){
+		if(showEmbedded){
+			// retrieve the list of existing test results for this test suite
+			List<TestResult> curTsResults = testResults.get(tsName);
+			// if no existing test results were found, initialize the list
+			if (curTsResults == null){
+				curTsResults = new ArrayList<TestResult>();
+			}
+			// only add the new test results if one with the same name and result doesn't already exist
+			if(!curTsResults.contains(tcResult)){
+				// add the new test result to the list of test results 
+				curTsResults.add(tcResult);				
+				// store the new list of test results 
+				testResults.put(tsName, curTsResults);
+			}
+		}
 	}
 
 	public abstract void initMockServer();

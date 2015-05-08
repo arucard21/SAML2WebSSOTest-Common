@@ -56,4 +56,10 @@ public class StandardNames {
 	public static final String X500_ENCODING = "Encoding";
 	public static final String X500_ENCODING_LDAP = "LDAP";
 	public static final String URLPARAM_SIGNATURE = "Signature";
+	public static final String URLPARAM_SAMLENCODING = "SAMLEncoding";
+	public static final Object SAMLENCODING_DEFLATE = "urn:oasis:names:tc:SAML:2.0:bindings:URL-Encoding:DEFLATE";
+	public static final String HEADER_CACHECONTROL = "Cache-Control";
+	public static final String HEADER_CACHECONTROL_VALUE = "no-cache, no-store";
+	public static final String HEADER_PRAGMA = "Pragma";
+	public static final String HEADER_PRAGMA_VALUE = "no-cache";
 }
