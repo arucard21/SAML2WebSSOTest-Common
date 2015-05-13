@@ -311,12 +311,13 @@ public abstract class TestRunner {
 				killMockServer();
 			}
 	
-			TestResult result = new TestResult(status, resultMessage);
-			result.setName(testcase.getClass().getSimpleName());
-			result.setDescription(testcase.getDescription());
-			result.setMandatory(testcase.isMandatory());
 			// add this test result to the list of test results
-			testsuiteResults.add(result);
+			testsuiteResults.add(
+					new TestResult(testcase.getClass().getSimpleName())
+					.withDescription(testcase.getDescription())
+					.isMandatory(testcase.isMandatory())
+					.withResultStatus(status)
+					.withResultMessage(resultMessage));
 		}
 		// retrieve the list of existing test results for this test suite
 		List<TestResult> curTsResults = testResults.get(tsName);
