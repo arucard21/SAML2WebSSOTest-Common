@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
@@ -128,7 +129,9 @@ public abstract class TestRunner {
 	 * @param testresults is a list of test case results
 	 */
 	public void outputTestResults() {
-		System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(testResults));
+		// sort the test results
+		TreeMap<String, List<TestResult>> sortedResults = new TreeMap<String, List<TestResult>>(testResults);
+		System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(sortedResults));
 	}
 
 	/**
@@ -330,10 +333,11 @@ public abstract class TestRunner {
 	}
 	
 	/**
-	 * Add a single test result to the list of test results that will
+	 * Add a single, test result to the list of test results that will
 	 * be displayed to the user. The test result must be added as part
-	 * of a specific test suite. This is only used for adding the embedded
-	 * tests to the test results
+	 * of a specific test suite. This is only used for adding test results
+	 * for the the embedded tests that are performed within the test
+	 * framework
 	 * 
 	 * @param tsName is the name of the test suite that the test results belongs to
 	 * @param tcResult is the test result that should be added to the list for the given test suite
