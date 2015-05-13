@@ -328,8 +328,11 @@ public abstract class TestRunner {
 		if (curTsResults != null){
 			testsuiteResults.addAll(curTsResults);
 		}
-		// add the test results of this suite to all test results
-		testResults.put(tsName, testsuiteResults);
+		// add test results, if any are available
+		if(!testsuiteResults.isEmpty()){
+			// add the test results of this suite to all test results
+			testResults.put(tsName, testsuiteResults);
+		}
 	}
 	
 	/**
